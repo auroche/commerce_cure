@@ -1,6 +1,6 @@
 # CommerceCure
 
-A payment processing library for Elixir.
+A payment processing library written in Elixir.
 
 ## Status
 

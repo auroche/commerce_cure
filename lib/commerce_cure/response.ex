@@ -39,7 +39,7 @@ defmodule CommerceCure.Response do
              {:ok, body} <- process_body(body),
              {:ok, error} <- process_error(body)
         do
-          {if(succeed?(body, error), do: :ok, else: :error), %__MODULE__{
+          {:ok, %__MODULE__{
             succeed?: succeed?(body, error),
             body: body,
             error: error
