@@ -69,9 +69,13 @@ defmodule CommerceCure.Name do
   "Commerce Cure"
 
   """
-  @spec full_name(t) :: String.t
-  def full_name(%{first_name: first, last_name: last}) do
+  @spec full_name(t, atom) :: String.t
+  def full_name(name, first_or_last \\ :first)
+  def full_name(%{first_name: first, last_name: last}, :first) do
     "#{first} #{last}"
+  end
+  def full_name(%{first_name: first, last_name: last}, :last) do
+    "#{last} #{first}"
   end
 
   @doc """

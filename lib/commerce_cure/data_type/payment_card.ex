@@ -14,7 +14,11 @@ defmodule CommerceCure.PaymentCard do
              }
 
   @enforce_keys [:number]
-  defstruct [:first_name, :last_name, :month, :year, :brand, :number, :verification_value]
+  defstruct ~w(first_name last_name month year brand number verification_value)a
+  @moduledoc """
+  can cast parameters
+  first_name last_name month year brand number verification_value name full_name expiry_date
+  """
 
   @doc """
   iex> PaymentCard.new(4242424242424242)
@@ -47,6 +51,13 @@ defmodule CommerceCure.PaymentCard do
                         first_name: first_name, last_name: last_name,
                         verification_value: verification_value}}
     end
+  end
+
+  def new(%{"number" => number} = map) do
+    map
+    |> Map.delete("number")
+    |> Map.put(:number, number)
+    |> new()
   end
 
   def new(list) when is_list(list) do
@@ -84,10 +95,7 @@ defmodule CommerceCure.PaymentCard do
   iex> PaymentCard.full_name(%{first_name: "Commerce", last_name: "Cure"})
   "Commerce Cure"
   """
-  @spec full_name(t) :: String.t
-  def full_name(%{first_name: first, last_name: last}) do
-    "#{first} #{last}"
-  end
+  defdelegate full_name(name, opt \\ :first), to: Name
 
   @doc """
   iex> PaymentCard.expiry_date(%{year: 2017, month: 5})
@@ -106,11 +114,15 @@ defmodule CommerceCure.PaymentCard do
       {:ok, %{year: year, month: month}}
     end
   end
-
+  defp new_expiry(%{"year" => year, "month" => month}) do
+    new_expiry(%{year: year, month: month})
+  end
   defp new_expiry(%{expiry_date: expiry_date}) do
     ExpiryDate.parse(expiry_date, "MM/YY")
   end
-
+  defp new_expiry(%{"expiry_date" => expiry_date}) do
+    new_expiry(%{expiry_date: expiry_date})
+  end
   defp new_expiry(_), do: {:ok, %{year: nil, month: nil}}
 
   # first_name, last_name > name | full_name
@@ -119,11 +131,16 @@ defmodule CommerceCure.PaymentCard do
   do
     Name.new(%{first_name: first, last_name: last})
   end
-  defp new_name(%{name: name}) when is_binary(name), do: Name.parse(name)
-  defp new_name(%{full_name: name}), do: Name.parse(name)
+  defp new_name(%{"first_name" => first, "last_name" => last}) do
+    Name.new(%{first_name: first, last_name: last})
+  end
+  defp new_name(%{"name" => name}),      do: Name.parse(name)
+  defp new_name(%{name: name}),          do: Name.parse(name)
+  defp new_name(%{"full_name" => name}), do: Name.parse(name)
+  defp new_name(%{full_name: name}),     do: Name.parse(name)
   defp new_name(_), do: {:ok, %{first_name: nil, last_name: nil}}
 
-  #
+  ### VERIFICATION VALUE
   defp new_verification_value(%{verification_value: vv}, brand)
     when is_binary(vv)
   do
@@ -132,6 +149,27 @@ defmodule CommerceCure.PaymentCard do
     else
       {:error, :invalid_verification_value}
     end
+  end
+  defp new_verification_value(%{"verification_value" => vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
+  end
+  defp new_verification_value(%{"vv" => vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
+  end
+  defp new_verification_value(%{"cvv" => vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
+  end
+  defp new_verification_value(%{"cvc" => vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
+  end
+  defp new_verification_value(%{vv: vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
+  end
+  defp new_verification_value(%{cvv: vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
+  end
+  defp new_verification_value(%{cvc: vv}, brand) do
+    new_verification_value(%{verification_value: vv}, brand)
   end
   defp new_verification_value(_, _), do: {:ok, %{verification_value: nil}}
 
